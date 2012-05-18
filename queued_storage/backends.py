@@ -6,6 +6,7 @@ from django.utils.functional import SimpleLazyObject
 
 from queued_storage.conf import settings
 from queued_storage.utils import import_attribute
+from queued_storage.tasks import CheckExists
 
 
 class LazyBackend(SimpleLazyObject):
@@ -109,12 +110,14 @@ class QueuedStorage(object):
         :type name: str
         :rtype: :class:`~django:django.core.files.storage.Storage`
         """
-        cache_result = cache.get(self.get_cache_key(name))
+        cache_key = self.get_cache_key(name)
+        cache_result = cache.get(cache_key)
         if cache_result:
             return self.remote
-        elif cache_result is None and self.remote.exists(name):
-            cache.set(self.get_cache_key(name), True)
-            return self.remote
+        elif cache_result is None:
+            CheckExists.delay(name,cache_key, self.remote_path, self.remote_options)
+            cache.set(self.get_cache_key(name), False)
+            return self.local
         else:
             return self.local
 

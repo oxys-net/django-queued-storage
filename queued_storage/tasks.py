@@ -6,7 +6,11 @@ from queued_storage.conf import settings
 from queued_storage.signals import file_transferred
 from queued_storage.utils import import_attribute
 
-
+class CheckExists(Task):
+    def run(self, name, cache_key, remote_path, remote_options, **kwargs):
+        remote = import_attribute(remote_path)(**remote_options)
+        cache.set(cache_key, remote.exists(name))
+        
 class Transfer(Task):
     """
     The default task. Transfers a file to a remote location.
