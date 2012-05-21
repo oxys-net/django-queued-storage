@@ -66,7 +66,13 @@ class QueuedStorage(object):
     #: to use, local or remote (default see
     #: :attr:`~queued_storage.conf.settings.QUEUED_STORAGE_CACHE_PREFIX`)
     cache_prefix = settings.QUEUED_STORAGE_CACHE_PREFIX
-
+    
+    def post_process(self, *args, **kwargs):
+        for val in self.local.post_process(*args, **kwargs):
+            yield val
+        for val in self.remote.post_process(*args, **kwargs):
+            yield val
+            
     def __init__(self, local=None, remote=None,
                  local_options=None, remote_options=None,
                  cache_prefix=None, delayed=None, task=None):
