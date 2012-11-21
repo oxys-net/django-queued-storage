@@ -1,4 +1,3 @@
-import urllib
 
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
@@ -8,6 +7,7 @@ from queued_storage.conf import settings
 from queued_storage.utils import import_attribute
 from queued_storage.tasks import CheckExists
 
+from django.utils.http import urlquote
 
 class LazyBackend(SimpleLazyObject):
 
@@ -66,13 +66,13 @@ class QueuedStorage(object):
     #: to use, local or remote (default see
     #: :attr:`~queued_storage.conf.settings.QUEUED_STORAGE_CACHE_PREFIX`)
     cache_prefix = settings.QUEUED_STORAGE_CACHE_PREFIX
-    
+
     def post_process(self, *args, **kwargs):
         for val in self.local.post_process(*args, **kwargs):
             yield val
         for val in self.remote.post_process(*args, **kwargs):
             yield val
-            
+
     def __init__(self, local=None, remote=None,
                  local_options=None, remote_options=None,
                  cache_prefix=None, delayed=None, task=None):
@@ -135,7 +135,7 @@ class QueuedStorage(object):
         :type name: str
         :rtype: str
         """
-        return '%s_%s' % (self.cache_prefix, urllib.quote(name))
+        return '%s_%s' % (self.cache_prefix, urlquote(name))
 
     def using_local(self, name):
         """
